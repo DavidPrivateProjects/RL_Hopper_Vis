@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ant Interface</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+        }
+        #loadingContainer {
+            width: 80%;
+            height: 30px;
+            background-color: lightgray;
+            margin-top: 20px;
+        }
+        #loadingBar {
+            width: 0;
+            height: 100%;
+            background-color: green;
+        }
+        #mp3Player {
+            display: none;
+            margin-top: 20px;
+        }
+        #startButton {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Ant Interface Loading...</h1>
+    <div id="loadingContainer">
+        <div id="loadingBar"></div>
+    </div>
+
+    <audio id="mp3Player" controls>
+        <source src="success.mp3" type="audio/mp3">
+        Your browser does not support the audio element.
+    </audio>
+
+    <button id="startButton" onclick="startProcess()">Start Process</button>
+
+    <script>
+        let progress = 0;
+
+        // Function to simulate the process
+        function startProcess() {
+            document.getElementById('startButton').disabled = true;
+            simulateProcess();
+        }
+
+        // Simulate loading progress (replace this with actual data from Pygame later)
+        function simulateProcess() {
+            if (progress < 100) {
+                progress++;
+                updateLoadingBar(progress);
+                setTimeout(simulateProcess, 50);  // Update every 50ms
+            } else {
+                document.getElementById('mp3Player').style.display = 'block';
+            }
+        }
+
+        // Function to update the loading bar width
+        function updateLoadingBar(progress) {
+            const loadingBar = document.getElementById('loadingBar');
+            loadingBar.style.width = progress + '%';
+        }
+    </script>
+
+</body>
+</html>
