@@ -188,8 +188,9 @@ def draw_rect(x, y, w, h):
     glVertex2f(x, y + h)
     glEnd()
 
-def draw_text(x, y, text, font, color=(255, 255, 255)):
-    text_surface = font.render(text, True, color, (0, 0, 0, 0))
+def draw_text(x, y, text, font, color=(255, 255, 255),
+             surface_color=(0, 0, 0, 0)):
+    text_surface = font.render(text, True, surface_color, color)
     text_data = pygame.image.tostring(text_surface, "RGBA", True)
     width, height = text_surface.get_size()
 
@@ -211,12 +212,15 @@ def draw_buttons():
     # Reset Button
     glColor3f(0.8, 0.2, 0.2)
     draw_rect(reset_button.x, reset_button.y, reset_button.width, reset_button.height)
-    draw_text(reset_button.x+17, reset_button.y+32, "Reset Settings", font)
+    draw_text(reset_button.x+19, reset_button.y+32, 
+              "Reset Settings", font, (204, 51, 51, 0))
 
     # Video Button
     glColor3f(0.2, 0.6, 0.2)
     draw_rect(video_button.x, video_button.y, video_button.width, video_button.height)
-    draw_text(video_button.x+13, video_button.y+32, "Start Simulation", font)
+    draw_text(video_button.x+13, video_button.y+32, 
+              "Start Simulation", font,
+              (51, 153, 51, 0))
 
     glEnable(GL_DEPTH_TEST)
 
