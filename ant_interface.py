@@ -19,6 +19,9 @@ last_mouse_pos = (0, 0)
 reset_button = pygame.Rect(1000, 20, 150, 40)
 video_button = pygame.Rect(1000, 70, 150, 40)
 
+pygame.font.init()
+font = pygame.font.SysFont("Arial", 20)
+
 
 def init():
     pygame.init()
@@ -185,6 +188,13 @@ def draw_rect(x, y, w, h):
     glVertex2f(x, y + h)
     glEnd()
 
+def draw_text(x, y, text, font, color=(255, 255, 255)):
+    text_surface = font.render(text, True, color, (0, 0, 0, 0))
+    text_data = pygame.image.tostring(text_surface, "RGBA", True)
+    width, height = text_surface.get_size()
+
+    glRasterPos2f(x, y)
+    glDrawPixels(width, height, GL_RGBA, GL_UNSIGNED_BYTE, text_data)
 
 def draw_buttons():
     glMatrixMode(GL_PROJECTION)
@@ -201,10 +211,12 @@ def draw_buttons():
     # Reset Button
     glColor3f(0.8, 0.2, 0.2)
     draw_rect(reset_button.x, reset_button.y, reset_button.width, reset_button.height)
+    draw_text(reset_button.x+17, reset_button.y+32, "Reset Settings", font)
 
     # Video Button
     glColor3f(0.2, 0.6, 0.2)
     draw_rect(video_button.x, video_button.y, video_button.width, video_button.height)
+    draw_text(video_button.x+13, video_button.y+32, "Start Simulation", font)
 
     glEnable(GL_DEPTH_TEST)
 
