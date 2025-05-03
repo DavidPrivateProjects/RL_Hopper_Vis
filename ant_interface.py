@@ -1,182 +1,192 @@
 import pygame
+from pygame.locals import *
+from OpenGL.GL import *
+from OpenGL.GLU import *
+import numpy as np
 import math
 
-# Pygame setup
-pygame.init()
-WIDTH, HEIGHT = 1000, 800
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("MuJoCo Ant 2D Visualization")
+WIDTH, HEIGHT = 1200, 800
 
-clock = pygame.time.Clock()
-font = pygame.font.SysFont(None, 36)
-
-# Colors
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-BUTTON_COLOR = (100, 100, 255)
-
-# Main torso position
-torso_pos = (WIDTH // 2, HEIGHT // 2)
-
-# Lengths of body parts
-thigh_length = 60
-shin_length = 60
-
-# Define joints (dynamic)
 joints = {}
-
-# Define limbs (connections between joints)
 limbs = []
-
-# Click tracking
 click_counts = {}
+rotation = [0, 0]
+mouse_down = False
+last_mouse_pos = (0, 0)
 
-# Movie mode variables
-movie_mode = False
-movie_frame = 0
+def init():
+    pygame.init()
+    pygame.display.set_mode((WIDTH, HEIGHT), DOUBLEBUF | OPENGL)
+    glEnable(GL_DEPTH_TEST)
 
-# Define button positions
-restart_button = pygame.Rect(850, 50, 140, 40)
-movie_button = pygame.Rect(850, 120, 140, 40)
+    glMatrixMode(GL_PROJECTION)
+    gluPerspective(45, (WIDTH / HEIGHT), 0.1, 100.0)
+    glMatrixMode(GL_MODELVIEW)
 
-# Joint/limb settings
-joint_radius = 15  # Clickable joint size
-
-def build_ant_structure(center):
+def build_ant_structure():
     joints.clear()
     limbs.clear()
     click_counts.clear()
 
-    cx, cy = center
+    torso = np.array([0, 1, 0])
+    joints["torso"] = torso
 
-    # Angles for each leg (starting direction from torso)
-    angles = {
-        "front_left": math.radians(45),
-        "front_right": math.radians(135),
-        "back_left": math.radians(-45),
-        "back_right": math.radians(-135),
+    # Leg params
+    shin_length = 1.5
+
+    leg_offsets = {
+        "front_left":  [0.5, 0.0,  0.4],
+        "front_right": [-0.5, 0.0,  0.4],
+        "back_left":   [0.5, 0.0, -0.4],
+        "back_right":  [-0.5, 0.0, -0.4],
     }
 
-    knee_offset_angle = math.radians(30)  # how much knee bends outward
-    foot_offset_angle = math.radians(30)  # how much foot bends outward
+    for leg, offset in leg_offsets.items():
+        hip = torso + np.array(offset)
+        joints[f"{leg}_hip"] = hip
 
-    # Build legs
-    for leg, angle in angles.items():
-        # Hip
-        hip_x = cx + 40 * math.cos(angle)
-        hip_y = cy + 40 * math.sin(angle)
+        # Knee goes downward
+        # knee = hip + np.array([offset[0], -thigh_length, offset[2]])
+        knee = hip + np.array([offset[0]*2, 0, offset[2]*2])
+        joints[f"{leg}_knee"] = knee
 
-        # Knee (bent outward)
-        if "left" in leg:
-            knee_angle = angle + knee_offset_angle
-            foot_angle = knee_angle + foot_offset_angle
-        else:
-            knee_angle = angle - knee_offset_angle
-            foot_angle = knee_angle - foot_offset_angle
+        # Foot goes further down
+        foot = knee + np.array([offset[0], -shin_length, offset[2]])
+        joints[f"{leg}_foot"] = foot
 
-        knee_x = hip_x + thigh_length * math.cos(knee_angle)
-        knee_y = hip_y + thigh_length * math.sin(knee_angle)
-
-        # Foot (bend again from knee direction)
-        foot_x = knee_x + shin_length * math.cos(foot_angle)
-        foot_y = knee_y + shin_length * math.sin(foot_angle)
-
-        # Register joints
-        joints[f"{leg}_hip"] = (hip_x, hip_y)
-        joints[f"{leg}_knee"] = (knee_x, knee_y)
-        joints[f"{leg}_foot"] = (foot_x, foot_y)
-
-        # Register limbs
         limbs.append(("torso", f"{leg}_hip"))
         limbs.append((f"{leg}_hip", f"{leg}_knee"))
         limbs.append((f"{leg}_knee", f"{leg}_foot"))
 
-    # Initialize click counts for joints that are clickable (hips and knees)
-    for joint in joints:
-        if "foot" not in joint:
+        for joint in [f"{leg}_hip", f"{leg}_knee"]:
             click_counts[joint] = 0
 
-def draw_ant():
-    # Draw torso
-    pygame.draw.circle(screen, BLACK, torso_pos, 30)
+def draw_sphere(pos, radius=2, color=(1, 0, 0)):
+    glPushMatrix()
+    glTranslatef(*pos)
+    glColor3fv(color)
+    quad = gluNewQuadric()
+    gluSphere(quad, radius, 20, 20)
+    glPopMatrix()
 
-    # Draw limbs (thicker, same width as joints)
-    for start, end in limbs:
-        start_pos = torso_pos if start == "torso" else joints[start]
-        end_pos = joints[end]
-        pygame.draw.line(screen, BLACK, start_pos, end_pos, joint_radius)
+def draw_limb(start, end, radius=0.25, colors=[1, 1, 1]):
+    # Create a vector from start to end
+    start = np.array(start)
+    end = np.array(end)
+    direction = end - start
+    length = np.linalg.norm(direction)
+    if length == 0:
+        return
 
-    # Draw joints
-    for name, pos in joints.items():
-        if "foot" in name:
-            color = (0, 0, 0)  # Feet not clickable
-            radius = 10
+    # Normalize direction
+    direction /= length
+
+    # Default cylinder points up the z-axis; we need to rotate it to match the direction
+    up = np.array([0, 0, 1])
+    axis = np.cross(up, direction)
+    angle = math.degrees(math.acos(np.dot(up, direction)))
+    
+    # Draw the cylinder
+    glPushMatrix()
+    glTranslatef(*start)
+
+    if np.linalg.norm(axis) > 1e-6:
+        glRotatef(angle, *axis)
+
+    glColor3f(*colors)
+    quad = gluNewQuadric()
+    gluCylinder(quad, radius, radius, length, 20, 1)
+    glPopMatrix()
+
+
+def render_ant():
+    RADIUS_TORSO = 0.8
+    RADIUS_LEGS = 0.3
+    
+    
+    for joint, pos in joints.items():
+        if "foot" in joint:
+            draw_sphere(pos, RADIUS_LEGS, (1, 1, 1))
+        elif "torso" in joint:
+            count = click_counts.get(joint, 0)
+            intensity = min(1.0, count * 0.25)
+            color = (1.0, 1.0 - intensity, 1.0 - intensity)
+            draw_sphere(pos, RADIUS_TORSO, color)
         else:
-            intensity = min(255, click_counts[name] * 40)
-            color = (255, 255 - intensity, 255 - intensity)
-            radius = joint_radius
+            count = click_counts.get(joint, 0)
+            intensity = min(1.0, count * 0.25)
+            color = (1.0, 1.0 - intensity, 1.0 - intensity)
+            draw_sphere(pos, RADIUS_LEGS, color)
 
-        # First draw black outline slightly bigger
-        pygame.draw.circle(screen, BLACK, (int(pos[0]), int(pos[1])), radius + 2)
-        # Then draw actual colored circle inside
-        pygame.draw.circle(screen, color, (int(pos[0]), int(pos[1])), radius)
+    for start, end in limbs:
+        draw_limb(joints[start], joints[end], RADIUS_LEGS)
 
-def draw_buttons():
-    pygame.draw.rect(screen, BUTTON_COLOR, restart_button)
-    pygame.draw.rect(screen, BUTTON_COLOR, movie_button)
+def get_mouse_ray(mx, my):
+    x = (2.0 * mx) / WIDTH - 1.0
+    y = 1.0 - (2.0 * my) / HEIGHT
+    modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
+    projection = glGetDoublev(GL_PROJECTION_MATRIX)
+    viewport = glGetIntegerv(GL_VIEWPORT)
 
-    restart_text = font.render('Restart', True, WHITE)
-    movie_text = font.render('Run Movie', True, WHITE)
+    near = gluUnProject(mx, HEIGHT - my, 0.0, modelview, projection, viewport)
+    far = gluUnProject(mx, HEIGHT - my, 1.0, modelview, projection, viewport)
 
-    screen.blit(restart_text, (restart_button.x + 30, restart_button.y + 5))
-    screen.blit(movie_text, (movie_button.x + 8, movie_button.y + 5))
+    ray_origin = np.array(near)
+    ray_dir = np.array(far) - ray_origin
+    ray_dir /= np.linalg.norm(ray_dir)
+    return ray_origin, ray_dir
 
-def reset_clicks():
-    for joint in click_counts:
-        click_counts[joint] = 0
+def ray_sphere_intersect(ray_origin, ray_dir, center, radius):
+    oc = ray_origin - center
+    b = 2.0 * np.dot(oc, ray_dir)
+    c = np.dot(oc, oc) - radius ** 2
+    discriminant = b * b - 4 * c
+    return discriminant >= 0
 
-def run_movie():
-    global movie_mode, movie_frame
-    movie_mode = True
-    movie_frame = 0
+def handle_click(mx, my):
+    ray_origin, ray_dir = get_mouse_ray(mx, my)
+    for name, center in joints.items():
+        if "foot" in name or "torso" in name:
+            continue
+        if ray_sphere_intersect(ray_origin, ray_dir, center, 0.4):
+            click_counts[name] += 1
+            break
 
-# Initialize the ant
-build_ant_structure(torso_pos)
+def handle_mouse_motion(pos):
+    global last_mouse_pos, rotation
+    if mouse_down:
+        dx = pos[0] - last_mouse_pos[0]
+        dy = pos[1] - last_mouse_pos[1]
+        rotation[0] += dx * 0.4
+        rotation[1] += dy * 0.4
+    last_mouse_pos = pos
 
-running = True
-movie_mode = False
-while running:
-    screen.fill(WHITE)
+def main():
+    global mouse_down
+    init()
+    build_ant_structure()
+    clock = pygame.time.Clock()
+    while True:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                pygame.quit()
+                return
+            elif event.type == MOUSEBUTTONDOWN and event.button == 1:
+                mouse_down = True
+                handle_click(*event.pos)
+            elif event.type == MOUSEBUTTONUP and event.button == 1:
+                mouse_down = False
+            elif event.type == MOUSEMOTION:
+                handle_mouse_motion(event.pos)
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            pos = pygame.mouse.get_pos()
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        glLoadIdentity()
+        glTranslatef(0, -1, -10)
+        glRotatef(rotation[1], 1, 0, 0)
+        glRotatef(rotation[0], 0, 1, 0)
+        render_ant()
+        pygame.display.flip()
+        clock.tick(60)
 
-            # Check joint clicks
-            for name, (x, y) in joints.items():
-                if "foot" not in name:
-                    if (x - pos[0])**2 + (y - pos[1])**2 < joint_radius**2:
-                        click_counts[name] += 1
-                        break
-            
-            # Check button clicks
-            if restart_button.collidepoint(pos):
-                reset_clicks()
-            if movie_button.collidepoint(pos):
-                movie_mode = True
-
-    if movie_mode:
-        print(click_counts)
-        movie_mode = False
-
-
-    draw_ant()
-    draw_buttons()
-
-    pygame.display.flip()
-    clock.tick(30)
-
-pygame.quit()
+if __name__ == "__main__":
+    main()
