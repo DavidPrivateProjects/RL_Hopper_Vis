@@ -176,8 +176,9 @@ def reset_clicks():
         click_counts[joint] = 0
 
 
-def play_video():
-    os.system("start example.mp4")  # Use "open" for Mac, "xdg-open" for Linux
+def play_video(current_state):
+    return not current_state
+
 
 
 def draw_rect(x, y, w, h):
@@ -219,7 +220,7 @@ def draw_buttons():
     glColor3f(0.2, 0.6, 0.2)
     draw_rect(video_button.x, video_button.y, video_button.width, video_button.height)
     draw_text(video_button.x+13, video_button.y+32, 
-              "Start Simulation", font,
+              "Rotate", font,
               (51, 153, 51, 0))
 
     glEnable(GL_DEPTH_TEST)
@@ -235,6 +236,7 @@ def main():
     init()
     build_ant_structure()
     clock = pygame.time.Clock()
+    video_bool = False
 
     while True:
         mx, my = pygame.mouse.get_pos()
@@ -248,7 +250,7 @@ def main():
                 if reset_button.collidepoint(mx, my):
                     reset_clicks()
                 elif video_button.collidepoint(mx, my):
-                    play_video()
+                    video_bool = play_video(video_bool)
                 else:
                     handle_click(mx, my)
             elif event.type == MOUSEBUTTONUP and event.button == 1:
@@ -262,6 +264,9 @@ def main():
         glRotatef(rotation[1], 1, 0, 0)
         glRotatef(rotation[0], 0, 1, 0)
 
+        if video_bool:
+            rotation[0] += 1
+        
         render_ant()
         draw_buttons()
 
