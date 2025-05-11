@@ -5,7 +5,7 @@ import argparse
 import numpy as np
 
 # Train from scratch:
-# python train_ant_new.py Ant-v5 SAC --reward-threshold 2000 -t
+# python train_ant_new.py Ant-v5 SAC --reward-threshold 2000 -t "all legs"
 
 # Retrain from checkpoint, stop when reward > 2000:
 # python train_ant_new.py Ant-v5 SAC -t --pretrained ./models/SAC_125000.zip --reward-threshold 2000
@@ -42,7 +42,7 @@ def get_model(algo, env):
         print('Algorithm not found')
         return None
 
-def train(env, algo, path_to_pretrained_model=None, reward_threshold=None, eval_freq=5000, name=None):
+def train(env, algo, path_to_pretrained_model=None, reward_threshold=None, name=None):
     """Train the model, optionally continuing from a pretrained model and stopping based on average reward."""
     
     if path_to_pretrained_model and os.path.isfile(path_to_pretrained_model):
@@ -92,7 +92,8 @@ def train(env, algo, path_to_pretrained_model=None, reward_threshold=None, eval_
             print(f"Stopping early: average reward {avg_reward:.2f} >= threshold {reward_threshold}")
             break
 
-        if iters > 20:  # Optional max cap
+        if iters > 30:  # Optional max cap
+            print("Training was stopped due to max iter cap")
             break
 
 def test(env, algo, path_to_model):
@@ -111,7 +112,14 @@ def test(env, algo, path_to_model):
 
     obs = env.reset()[0]
     extra_steps = 50
+    steps = 400
     while True:
+        steps -= 1
+        if steps == 0:
+            steps = 400
+            obs = env.reset()[0]
+            extra_steps = 50
+        
         action, _ = model.predict(obs)
         obs, _, terminated, _, _ = env.step(action)
         
