@@ -7,7 +7,7 @@ import numpy as np
 # Train from scratch:
 # python train_ant_new.py Ant-v5 SAC --reward-threshold 2000 -t
 
-# Retrain from checkpoint, stop when reward > 3000:
+# Retrain from checkpoint, stop when reward > 2000:
 # python train_ant_new.py Ant-v5 SAC -t --pretrained ./models/SAC_125000.zip --reward-threshold 2000
 
 # Test a trained model:
@@ -42,7 +42,7 @@ def get_model(algo, env):
         print('Algorithm not found')
         return None
 
-def train(env, algo, path_to_pretrained_model=None, reward_threshold=None, eval_freq=5000):
+def train(env, algo, path_to_pretrained_model=None, reward_threshold=None, eval_freq=5000, name=None):
     """Train the model, optionally continuing from a pretrained model and stopping based on average reward."""
     
     if path_to_pretrained_model and os.path.isfile(path_to_pretrained_model):
@@ -68,7 +68,7 @@ def train(env, algo, path_to_pretrained_model=None, reward_threshold=None, eval_
     while True:
         iters += 1
         model.learn(total_timesteps=TIMESTEPS, reset_num_timesteps=False)
-        model.save(f"{model_dir}/{algo}_{TIMESTEPS*iters}")
+        model.save(f"{model_dir}/{name}_{algo}_{TIMESTEPS*iters}")
         
         # Evaluate the model
         rewards = []
@@ -127,6 +127,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train or test model.')
     parser.add_argument('gymenv', help='Gymnasium environment i.e. Humanoid-v4')
     parser.add_argument('algo', help='StableBaseline3 RL algorithm i.e. SAC, TD3')
+    parser.add_argument('name', help='Name of the folder in which the model will be saved as well as the logs files')
     parser.add_argument('-t', '--train', action='store_true', help='Flag to train the model')
     parser.add_argument('-s', '--test', metavar='path_to_model', help='Path to model for testing')
     parser.add_argument('--pretrained', metavar='path_to_model', help='Path to pretrained model for continued training')
@@ -142,7 +143,8 @@ if __name__ == '__main__':
             gymenv,
             args.algo,
             path_to_pretrained_model=args.pretrained,
-            reward_threshold=args.reward_threshold
+            reward_threshold=args.reward_threshold,
+            name=args.name
         )
 
     if args.test:
