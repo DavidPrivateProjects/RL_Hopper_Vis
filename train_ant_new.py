@@ -61,7 +61,7 @@ def train(env, algo, path_to_pretrained_model=None, reward_threshold=None, eval_
         if not model:
             return
 
-    TIMESTEPS = 50000
+    TIMESTEPS = 5000
     iters = 0
     eval_env = ZeroOutActionsWrapper(gym.make(env.spec.id))  # Evaluation environment
 
@@ -77,13 +77,14 @@ def train(env, algo, path_to_pretrained_model=None, reward_threshold=None, eval_
             done = False
             ep_reward = 0
             time_steps = 0
-            while not done or time_steps > 1000:
+            while not done and time_steps < 1000:
                 time_steps += 1
                 action, _ = model.predict(obs, deterministic=True)
                 obs, reward, done, _, _ = eval_env.step(action)
                 ep_reward += reward
             rewards.append(ep_reward)
-        
+            print(rewards)
+
         avg_reward = np.mean(rewards)
         print(f"[Iter {iters}] Average reward: {avg_reward:.2f}")
 
