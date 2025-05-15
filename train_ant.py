@@ -21,7 +21,9 @@ class ZeroOutActionsWrapper(gym.ActionWrapper):
 
     def action(self, action):
         action = np.array(action, dtype=np.float32)
-        action[4:7] = 0.0  # Set actions 11 to 16 to zero
+        # action[4:] = 0.0
+        action[6:] = 0.0
+        action[2:4] = 0.0
         return action
 
 # Create directories to hold models and logs
