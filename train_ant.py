@@ -1,9 +1,18 @@
-import gymnasium as gym
+import gymnasium as gym 
 from stable_baselines3 import SAC, TD3, A2C
 import os
 import argparse
 import numpy as np
-from collections import OrderedDict
+
+# Train from scratch:
+# python train_ant.py Ant-v5 SAC --reward-threshold 1000 -t "all legs"
+
+# Retrain from checkpoint, stop when reward > 2000:
+# python train_ant.py Ant-v5 SAC -t --pretrained ./models/All_Legs/all_legs_SAC_125000.zip --reward-threshold 1000 3_legs
+
+# Test a trained model:
+# python train_ant.py Ant-v5 SAC -s ./models/SAC_125000.zip
+
 
 class ZeroOutActionsWrapper(gym.ActionWrapper):
     def __init__(self, env):
@@ -12,15 +21,8 @@ class ZeroOutActionsWrapper(gym.ActionWrapper):
 
     def action(self, action):
         action = np.array(action, dtype=np.float32)
-        action[11:17] = 0.0  # Set actions 11 to 16 to zero
+        action[4:7] = 0.0  # Set actions 11 to 16 to zero
         return action
-
-
-# HumanoidStandup-v5
-# python main.py HumanoidStandup-v5 SAC -s ./models/SAC_125000.zip
-# python main.py HumanoidStandup-v5 SAC -t
-# 
-# https://www.youtube.com/watch?v=OqvXHi_QtT0
 
 # Create directories to hold models and logs
 model_dir = "models"
@@ -28,11 +30,10 @@ log_dir = "logs"
 os.makedirs(model_dir, exist_ok=True)
 os.makedirs(log_dir, exist_ok=True)
 
-
 def get_model(algo, env):
     """Returns the appropriate model based on the algorithm."""
     if algo == 'SAC':
-         return SAC('MlpPolicy', env, verbose=1, device='cuda', tensorboard_log=log_dir)
+        return SAC('MlpPolicy', env, verbose=1, device='cuda', tensorboard_log=log_dir)
     elif algo == 'TD3':
         return TD3('MlpPolicy', env, verbose=1, device='cuda', tensorboard_log=log_dir)
     elif algo == 'A2C':
@@ -41,28 +42,64 @@ def get_model(algo, env):
         print('Algorithm not found')
         return None
 
+def train(env, algo, path_to_pretrained_model=None, reward_threshold=None, name=None):
+    """Train the model, optionally continuing from a pretrained model and stopping based on average reward."""
+    
+    if path_to_pretrained_model and os.path.isfile(path_to_pretrained_model):
+        print(f"Loading pretrained model from {path_to_pretrained_model}")
+        if algo == 'SAC':
+            model = SAC.load(path_to_pretrained_model, env=env)
+        elif algo == 'TD3':
+            model = TD3.load(path_to_pretrained_model, env=env)
+        elif algo == 'A2C':
+            model = A2C.load(path_to_pretrained_model, env=env)
+        else:
+            print("Unsupported algorithm.")
+            return
+    else:
+        model = get_model(algo, env)
+        if not model:
+            return
 
-def train(env, algo):
-    """Train the model."""
-    model = get_model(algo, env)
-    if not model:
-        return
-
-    TIMESTEPS = 50000
+    TIMESTEPS = 5000
     iters = 0
+    eval_env = ZeroOutActionsWrapper(gym.make(env.spec.id))  # Evaluation environment
+
     while True:
         iters += 1
         model.learn(total_timesteps=TIMESTEPS, reset_num_timesteps=False)
-        model.save(f"{model_dir}/{algo}_{TIMESTEPS*iters}")
-        if iters > 5:
+        model.save(f"{model_dir}/{name}_{algo}_{TIMESTEPS*iters}")
+        
+        # Evaluate the model
+        rewards = []
+        for _ in range(5):
+            obs = eval_env.reset()[0]
+            done = False
+            ep_reward = 0
+            time_steps = 0
+            while not done and time_steps < 1000:
+                time_steps += 1
+                action, _ = model.predict(obs, deterministic=True)
+                obs, reward, done, _, _ = eval_env.step(action)
+                ep_reward += reward
+            rewards.append(ep_reward)
+            print(rewards)
+
+        avg_reward = np.mean(rewards)
+        print(f"[Iter {iters}] Average reward: {avg_reward:.2f}")
+
+        if reward_threshold and avg_reward >= reward_threshold:
+            print(f"Stopping early: average reward {avg_reward:.2f} >= threshold {reward_threshold}")
             break
 
+        if iters > 40:  # Optional max cap
+            print("Training was stopped due to max iter cap")
+            break
 
 def test(env, algo, path_to_model):
     """Test the trained model."""
     model = None
 
-    # Load the model based on the algorithm
     if algo == 'SAC':
         model = SAC.load(path_to_model, env=env)
     elif algo == 'TD3':
@@ -75,32 +112,48 @@ def test(env, algo, path_to_model):
 
     obs = env.reset()[0]
     extra_steps = 50
+    steps = 400
     while True:
+        steps -= 1
+        if steps == 0:
+            steps = 400
+            obs = env.reset()[0]
+            extra_steps = 50
+        
         action, _ = model.predict(obs)
         obs, _, terminated, _, _ = env.step(action)
         
-        if terminated==True:
+        if terminated:
             extra_steps -= 1
         
         if extra_steps == 0:
             obs = env.reset()[0]
             extra_steps = 50
 
-
 if __name__ == '__main__':
     # Parse command line inputs
     parser = argparse.ArgumentParser(description='Train or test model.')
     parser.add_argument('gymenv', help='Gymnasium environment i.e. Humanoid-v4')
     parser.add_argument('algo', help='StableBaseline3 RL algorithm i.e. SAC, TD3')
-    parser.add_argument('-t', '--train', action='store_true')
-    parser.add_argument('-s', '--test', metavar='path_to_model')
+    parser.add_argument('name', help='Name of the folder in which the model will be saved as well as the logs files')
+    parser.add_argument('-t', '--train', action='store_true', help='Flag to train the model')
+    parser.add_argument('-s', '--test', metavar='path_to_model', help='Path to model for testing')
+    parser.add_argument('--pretrained', metavar='path_to_model', help='Path to pretrained model for continued training')
+    parser.add_argument('--reward-threshold', type=float, help='Stop training when avg reward exceeds this')
+
     args = parser.parse_args()
 
     if args.train:
         gymenv = gym.make(args.gymenv, render_mode=None)
         gymenv = ZeroOutActionsWrapper(gymenv)
         
-        train(gymenv, args.algo)
+        train(
+            gymenv,
+            args.algo,
+            path_to_pretrained_model=args.pretrained,
+            reward_threshold=args.reward_threshold,
+            name=args.name
+        )
 
     if args.test:
         if os.path.isfile(args.test):
