@@ -2,7 +2,10 @@
 
 ## Demo
 ### Ant walker with no Injuries
-![Rot_All_Legs](https://github.com/user-attachments/assets/ae20329e-23f4-4113-8164-44c2c535c739) | ![All_Legs](https://github.com/user-attachments/assets/9cd9de8e-8bb3-47e6-8781-c6435a99c765)
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/ae20329e-23f4-4113-8164-44c2c535c739" alt="Rot_All_Legs" width="45%" />
+  <img src="https://github.com/user-attachments/assets/9cd9de8e-8bb3-47e6-8781-c6435a99c765" alt="All_Legs" width="45%" />
+</p>
 ### Ant walker with only 3 Legs
 
 ### Ant walker with 2 Legs (symmetrical)
