@@ -32,6 +32,15 @@ This project explores how MuJoCo agents trained with the SAC algorithm adapt to 
 </p>
 
 ## Results
+
+In the initial training phase, the base Ant agent—utilizing the SAC (Soft Actor-Critic) algorithm—required 26 training episodes, each consisting of 5000 time steps, to achieve an average episode reward of 1000 across five evaluation runs. Following this, various injury scenarios were introduced by constraining parts of the action space, effectively simulating the loss of limb functionality.
+
+When a single leg was disabled, the impaired agent required an additional 17 training episodes to recover and reach the original average reward benchmark of 1000. Interestingly, in cases involving more severe injuries—specifically the removal of two legs—the agent demonstrated faster recovery. For the symmetrically impaired two-leg agent, only 12 episodes were needed to regain baseline performance. Even more striking, agents with asymmetrical two-leg impairments required just 4 episodes to recover to the same performance level.
+
+An additional and unexpected observation was that the average episode reward and episode length did not decline substantially immediately following injury in the two-legged impairment cases. This was contrary to initial expectations and suggests that the performance degradation due to reduced action space may not be strictly proportional to the severity of impairment. In fact, in certain scenarios, a reduction in action space might simplify the control problem, leading to faster adaptation and, potentially, improved learning efficiency.
+
+These results highlight the nuanced relationship between action space dimensionality, environment constraints, and reinforcement learning algorithm dynamics. They suggest that, depending on the structure of the agent and task, a constrained action space might facilitate more focused policy learning, particularly when leveraging algorithms like SAC that are known for sample efficiency and stability in continuous control tasks.
+
 <p align="center">
 <img src="https://github.com/user-attachments/assets/ac817306-02f9-4fe6-8caf-59755b7a40ac" alt="Rot_All_Legs" width="25%" />
 </p>
