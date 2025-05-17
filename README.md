@@ -37,7 +37,7 @@ This project explores how MuJoCo agents trained with the SAC algorithm adapt to 
 </p>
 <p align="center">
   <img src="https://github.com/user-attachments/assets/5f41314c-86da-4521-9626-a5678bf61b85" alt="All_Legs" width="45%" />
-  <img src="https://github.com/user-attachments/assets/d2d93fba-f28c-4821-98ea-8e5f1518037d" alt="All_Legs" width="48%" />
+  <img src="https://github.com/user-attachments/assets/d2d93fba-f28c-4821-98ea-8e5f1518037d" alt="All_Legs" width="47%" />
 </p>
 
 
