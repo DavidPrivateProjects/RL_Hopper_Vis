@@ -7,7 +7,6 @@
   <img src="https://github.com/user-attachments/assets/ae20329e-23f4-4113-8164-44c2c535c739" alt="Rot_All_Legs" width="20%" />
   <img src="https://github.com/user-attachments/assets/e80fb345-3fbf-41b8-a31e-ad53f70b21b0" alt="All_Legs" width="75%" />
 </p>
-![All_Legs](https://github.com/user-attachments/assets/e80fb345-3fbf-41b8-a31e-ad53f70b21b0)
 
 
 ### Ant Walker with only 3 functional Legs
@@ -17,9 +16,14 @@
   <img src="https://github.com/user-attachments/assets/fdf0c27a-e3e2-4dde-b34d-f3eaebab7cd9" alt="All_Legs" width="75%" />
 </p>
 
-### Ant walker with 2 Legs (symmetrical)
+### Ant Walker with 2 functional Legs (symmetrical)
 
-### Ant walker with 2 Legs (asymmetrical)
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/9ea10625-80e9-44f6-884a-a756bad052a4" alt="Rot_All_Legs" width="20%" />
+  <img src="https://github.com/user-attachments/assets/df32a77f-998b-4ad1-8179-a827d60fcd51" alt="All_Legs" width="75%" />
+</p>
+
+### Ant Walker with functional 2 Legs (asymmetrical)
 
 ## Requirements
 To run this code, you need Python 3.7 or later and the following Python packages:
