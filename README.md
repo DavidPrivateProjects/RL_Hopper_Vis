@@ -1,4 +1,5 @@
 # Mujoco Ant Reinforcement Learning with Injury
+This project explores how MuJoCo agents trained with the SAC algorithm adapt to injuries: modeled as changes in the action space—and how quickly they can regain a target level of performance through retraining.
 
 ## Demo
 ### Ant Walker with no Injuries
