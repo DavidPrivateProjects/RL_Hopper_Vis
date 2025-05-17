@@ -11,8 +11,8 @@
 ### Ant walker with only 3 Legs
 
 <p align="center">
+  <img src="https://github.com/user-attachments/assets/924d9931-f7da-4d69-ab98-5dff9a128769" alt="All_Legs" width="65%" />
   <img src="https://github.com/user-attachments/assets/fdf0c27a-e3e2-4dde-b34d-f3eaebab7cd9" alt="Rot_All_Legs" width="45%" />
-  <img src="https://github.com/user-attachments/assets/924d9931-f7da-4d69-ab98-5dff9a128769" alt="All_Legs" width="45%" />
 </p>
 
 ### Ant walker with 2 Legs (symmetrical)
