@@ -5,8 +5,10 @@
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/ae20329e-23f4-4113-8164-44c2c535c739" alt="Rot_All_Legs" width="20%" />
-  <img src="https://github.com/user-attachments/assets/9cd9de8e-8bb3-47e6-8781-c6435a99c765" alt="All_Legs" width="75%" />
+  <img src="https://github.com/user-attachments/assets/e80fb345-3fbf-41b8-a31e-ad53f70b21b0" alt="All_Legs" width="75%" />
 </p>
+![All_Legs](https://github.com/user-attachments/assets/e80fb345-3fbf-41b8-a31e-ad53f70b21b0)
+
 
 ### Ant Walker with only 3 functional Legs
 
