@@ -25,6 +25,11 @@
 
 ### Ant Walker with functional 2 Legs (asymmetrical)
 
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/00bf4787-8cbc-4324-892a-8b6dd807d2d2" alt="Rot_All_Legs" width="20%" />
+  <img src="https://github.com/user-attachments/assets/61865376-028a-424f-af45-76bfeffdf7db" alt="All_Legs" width="75%" />
+</p>
+
 ## Requirements
 To run this code, you need Python 3.7 or later and the following Python packages:
 - gymnasium
