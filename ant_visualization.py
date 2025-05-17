@@ -4,25 +4,29 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 import numpy as np
 import math
-import os
 
+# Window dimensions
 WIDTH, HEIGHT = 1200, 800
 
-joints = {}
-limbs = []
-click_counts = {}
+# Data structures for the ant model
+joints = {} # Joint name to position mapping
+limbs = [] # List of (start_joint, end_joint) tuples
+click_counts = {} # Number of clicks per limb (for coloring)
+
+# Mouse and rotation state
 rotation = [0, 0]
 mouse_down = False
 last_mouse_pos = (0, 0)
 
-# Button rects (using pygame.Rect for logic only)
+# UI buttons using pygame.Rect (for logical interaction only)
 reset_button = pygame.Rect(1000, 20, 150, 40)
 video_button = pygame.Rect(1000, 70, 150, 40)
 
+# Font initialization for UI text
 pygame.font.init()
 font = pygame.font.SysFont("Arial", 20)
 
-
+# Initialize Pygame, OpenGL settings, and projection matrix
 def init():
     pygame.init()
     pygame.display.set_mode((WIDTH, HEIGHT), DOUBLEBUF | OPENGL)
@@ -33,7 +37,7 @@ def init():
     gluPerspective(45, (WIDTH / HEIGHT), 0.1, 100.0)
     glMatrixMode(GL_MODELVIEW)
 
-
+# Construct the 3D ant structure from joint positions and limb connections
 def build_ant_structure():
     joints.clear()
     limbs.clear()
@@ -64,7 +68,7 @@ def build_ant_structure():
         limbs.append((f"{leg}_hip", f"{leg}_knee"))
         limbs.append((f"{leg}_knee", f"{leg}_foot"))
 
-
+# Render a joint as a sphere
 def draw_sphere(pos, radius=2, color=(0, 0, 0)):
     glPushMatrix()
     glTranslatef(*pos)
@@ -73,7 +77,7 @@ def draw_sphere(pos, radius=2, color=(0, 0, 0)):
     gluSphere(quad, radius, 20, 20)
     glPopMatrix()
 
-
+# Render a limb as a cylinder between two joints
 def draw_limb(start, end, radius=0.25, colors=(1, 1, 1)):
     start = np.array(start)
     end = np.array(end)
@@ -98,7 +102,7 @@ def draw_limb(start, end, radius=0.25, colors=(1, 1, 1)):
     gluCylinder(quad, radius, radius, length, 20, 1)
     glPopMatrix()
 
-
+# Render the entire ant model
 def render_ant():
     RADIUS_TORSO = 0.8
     RADIUS_LEGS = 0.3
@@ -112,7 +116,7 @@ def render_ant():
         color = (1.0, 1.0 - intensity, 1.0 - intensity)
         draw_limb(joints[start], joints[end], RADIUS_LEGS, color)
 
-
+# Convert 2D mouse position to 3D picking ray
 def get_mouse_ray(mx, my):
     modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
     projection = glGetDoublev(GL_PROJECTION_MATRIX)
@@ -126,7 +130,7 @@ def get_mouse_ray(mx, my):
     ray_dir /= np.linalg.norm(ray_dir)
     return ray_origin, ray_dir
 
-
+# Ray-cylinder intersection test for limb selection
 def ray_cylinder_intersect(ray_origin, ray_dir, p1, p2, radius):
     d = p2 - p1
     m = ray_origin - p1
@@ -152,7 +156,7 @@ def ray_cylinder_intersect(ray_origin, ray_dir, p1, p2, radius):
             return True
     return False
 
-
+# Handle mouse clicks for selecting limbs
 def handle_click(mx, my):
     ray_origin, ray_dir = get_mouse_ray(mx, my)
     for i, (start, end) in enumerate(limbs):
@@ -160,7 +164,7 @@ def handle_click(mx, my):
             click_counts[i] = click_counts.get(i, 0) + 1
             break
 
-
+# Update camera rotation based on mouse movement
 def handle_mouse_motion(pos):
     global last_mouse_pos, rotation
     if mouse_down:
@@ -170,17 +174,16 @@ def handle_mouse_motion(pos):
         rotation[1] += dy * 0.4
     last_mouse_pos = pos
 
-
+# Reset all limb click counts
 def reset_clicks():
     for joint in click_counts:
         click_counts[joint] = 0
 
-
+# Toggle video (automatic rotation)
 def play_video(current_state):
     return not current_state
 
-
-
+# Draw a filled rectangle (used for buttons)
 def draw_rect(x, y, w, h):
     glBegin(GL_QUADS)
     glVertex2f(x, y)
@@ -189,6 +192,7 @@ def draw_rect(x, y, w, h):
     glVertex2f(x, y + h)
     glEnd()
 
+# Draw text using Pygame font rendering
 def draw_text(x, y, text, font, color=(255, 255, 255),
              surface_color=(0, 0, 0, 0)):
     text_surface = font.render(text, True, surface_color, color)
@@ -198,6 +202,7 @@ def draw_text(x, y, text, font, color=(255, 255, 255),
     glRasterPos2f(x, y)
     glDrawPixels(width, height, GL_RGBA, GL_UNSIGNED_BYTE, text_data)
 
+# Draw the UI buttons
 def draw_buttons():
     glMatrixMode(GL_PROJECTION)
     glPushMatrix()
@@ -216,7 +221,7 @@ def draw_buttons():
     draw_text(reset_button.x+19, reset_button.y+32, 
               "Reset Settings", font, (204, 51, 51, 0))
 
-    # Video Button
+    # Rotate (video) button
     glColor3f(0.2, 0.6, 0.2)
     draw_rect(video_button.x, video_button.y, video_button.width, video_button.height)
     draw_text(video_button.x+13, video_button.y+32, 
@@ -265,7 +270,7 @@ def main():
         glRotatef(rotation[0], 0, 1, 0)
 
         if video_bool:
-            rotation[0] += 1
+            rotation[0] += 1 # Continuous rotation when video mode is active
         
         render_ant()
         draw_buttons()
