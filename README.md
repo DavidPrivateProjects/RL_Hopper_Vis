@@ -31,6 +31,15 @@ This project explores how MuJoCo agents trained with the SAC algorithm adapt to 
   <img src="https://github.com/user-attachments/assets/61865376-028a-424f-af45-76bfeffdf7db" alt="All_Legs" width="75%" />
 </p>
 
+## Results
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/ac817306-02f9-4fe6-8caf-59755b7a40ac" alt="Rot_All_Legs" width="10%" />
+  <img src="https://github.com/user-attachments/assets/5f41314c-86da-4521-9626-a5678bf61b85" alt="All_Legs" width="40%" />
+  <img src="https://github.com/user-attachments/assets/d2d93fba-f28c-4821-98ea-8e5f1518037d" alt="All_Legs" width="40%" />
+</p>
+
+
+
 ## Requirements
 To run this code, you need Python 3.7 or later and the following Python packages:
 - gymnasium
