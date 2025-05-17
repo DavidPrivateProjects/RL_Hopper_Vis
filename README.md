@@ -1,16 +1,14 @@
 # Mujoco Ant Reinforcement Learning with Injury
 
 ## Demo
-
 ### Ant walker with no Injuries
+![Rot_All_Legs](https://github.com/user-attachments/assets/ae20329e-23f4-4113-8164-44c2c535c739)|![All_Legs](https://github.com/user-attachments/assets/9cd9de8e-8bb3-47e6-8781-c6435a99c765)
 
+### Ant walker with only 3 Legs
 
-https://github.com/user-attachments/assets/a0f4f2b0-7ffa-482b-8fad-b279d741ee84 
-https://github.com/user-attachments/assets/8e6e6acb-ef0a-4962-97ba-cc1525cbf896
+### Ant walker with 2 Legs (symmetrical)
 
-
-
-### Ant walker
+### Ant walker with 2 Legs (asymmetrical)
 
 ## Requirements
 To run this code, you need Python 3.7 or later and the following Python packages:
